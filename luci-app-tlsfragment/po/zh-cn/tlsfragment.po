@@ -1,0 +1,178 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_CN\n"
+
+msgid "TLS Fragment"
+msgstr "TLS分片代理"
+
+msgid "TLS Fragment Proxy"
+msgstr "TLS分片代理"
+
+msgid "TLS fragmentation proxy to bypass network censorship and filtering"
+msgstr "用于绕过网络审查和过滤的TLS分片代理"
+
+msgid "Service Status"
+msgstr "服务状态"
+
+msgid "Current Status"
+msgstr "当前状态"
+
+msgid "General Settings"
+msgstr "常规设置"
+
+msgid "Enable Service"
+msgstr "启用服务"
+
+msgid "Listen Port"
+msgstr "监听端口"
+
+msgid "Port for the proxy server to listen on"
+msgstr "代理服务器监听的端口"
+
+msgid "Log Level"
+msgstr "日志级别"
+
+msgid "Logging verbosity level"
+msgstr "日志详细程度"
+
+msgid "Proxy Mode"
+msgstr "代理模式"
+
+msgid "TLS Fragmentation"
+msgstr "TLS分片"
+
+msgid "Fake Desync"
+msgstr "伪反同步"
+
+msgid "Direct Proxy"
+msgstr "直连代理"
+
+msgid "Method used to bypass filtering"
+msgstr "用于绕过过滤的方法"
+
+msgid "TLS Fragmentation Settings"
+msgstr "TLS分片设置"
+
+msgid "TCP Pieces"
+msgstr "TCP分片数"
+
+msgid "Number of TCP fragments"
+msgstr "TCP分片数量"
+
+msgid "TLS Pieces"
+msgstr "TLS分片数"
+
+msgid "Number of TLS fragments"
+msgstr "TLS分片数量"
+
+msgid "TCP SNI Length"
+msgstr "TCP SNI长度"
+
+msgid "Length of TCP SNI fragments"
+msgstr "TCP SNI分片长度"
+
+msgid "TLS SNI Length"
+msgstr "TLS SNI长度"
+
+msgid "Length of TLS SNI fragments"
+msgstr "TLS SNI分片长度"
+
+msgid "Send Interval"
+msgstr "发送间隔"
+
+msgid "Interval between fragment sends (seconds)"
+msgstr "分片发送间隔（秒）"
+
+msgid "Fake Desync Settings"
+msgstr "伪反同步设置"
+
+msgid "Fake TTL"
+msgstr "伪TTL"
+
+msgid "TTL value for fake packets"
+msgstr "伪造数据包的TTL值"
+
+msgid "Fake Sleep"
+msgstr "伪休眠"
+
+msgid "Sleep time after sending fake packet (seconds)"
+msgstr "发送伪造数据包后的休眠时间（秒）"
+
+msgid "DNS Settings"
+msgstr "DNS设置"
+
+msgid "DoH Server"
+msgstr "DoH服务器"
+
+msgid "DNS over HTTPS server URL"
+msgstr "DNS over HTTPS服务器地址"
+
+msgid "Enable DNS Cache"
+msgstr "启用DNS缓存"
+
+msgid "Cache DNS queries to improve performance"
+msgstr "缓存DNS查询以提升性能"
+
+msgid "DNS Cache TTL"
+msgstr "DNS缓存TTL"
+
+msgid "DNS cache time-to-live in seconds (default: 3 days)"
+msgstr "DNS缓存生存时间（秒，默认3天）"
+
+msgid "Enable TTL Cache"
+msgstr "启用TTL缓存"
+
+msgid "Cache TTL detection results"
+msgstr "缓存TTL检测结果"
+
+msgid "Advanced Settings"
+msgstr "高级设置"
+
+msgid "Socket Timeout"
+msgstr "Socket超时"
+
+msgid "Socket timeout in seconds"
+msgstr "Socket超时时间（秒）"
+
+msgid "Safety Check"
+msgstr "安全检查"
+
+msgid "Enable additional safety checks"
+msgstr "启用额外的安全检查"
+
+msgid "UDP Fake DNS"
+msgstr "UDP伪DNS"
+
+msgid "Use fake DNS responses for UDP queries"
+msgstr "对UDP查询使用伪造DNS响应"
+
+msgid "Process by SNI First"
+msgstr "优先按SNI处理"
+
+msgid "Process connections by SNI before other methods"
+msgstr "在其他方法前优先按SNI处理连接"
+
+msgid "Proxy Domains"
+msgstr "代理域名"
+
+msgid "Domains that should be processed by the proxy"
+msgstr "需要代理处理的域名"
+
+msgid "Domain"
+msgstr "域名"
+
+msgid "Domain name or pattern"
+msgstr "域名或匹配模式"
+
+msgid "Service Control"
+msgstr "服务控制"
+
+msgid "Apply Settings"
+msgstr "应用设置"
+
+msgid "Restart Service"
+msgstr "重启服务"
+
+msgid "Stop Service"
+msgstr "停止服务" 

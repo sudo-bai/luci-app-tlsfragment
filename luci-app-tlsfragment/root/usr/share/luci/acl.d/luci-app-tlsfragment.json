@@ -1,0 +1,11 @@
+{
+    "luci-app-tlsfragment": {
+        "description": "Grant access to TLS Fragment",
+        "read": {
+            "uci": [ "tlsfragment" ]
+        },
+        "write": {
+            "uci": [ "tlsfragment" ]
+        }
+    }
+} 

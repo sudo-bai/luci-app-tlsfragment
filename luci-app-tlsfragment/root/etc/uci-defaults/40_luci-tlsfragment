@@ -1,0 +1,7 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+    delete ucitrack.@tlsfragment[-1]
+    add ucitrack tlsfragment
+    set ucitrack.@tlsfragment[-1].init=tlsfragment
+    commit ucitrack

@@ -1,0 +1,139 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+USE_PROCD=1
+PROG=/usr/bin/tlsfragment
+CONF_FILE=/etc/tlsfragment/config.json
+
+start_service() {
+	local enabled
+	config_load tlsfragment
+	config_get enabled main enabled 0
+	
+	[ "$enabled" -eq 1 ] || {
+		echo "TLS Fragment is disabled"
+		return 1
+	}
+	
+	# Generate config file from UCI
+	generate_config
+	
+	procd_open_instance
+	procd_set_param command "$PROG"
+	procd_set_param respawn
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param file /etc/config/tlsfragment
+	procd_close_instance
+}
+
+stop_service() {
+	killall tlsfragment 2>/dev/null
+}
+
+reload_service() {
+	stop
+	start
+}
+
+generate_config() {
+	local port loglevel mode num_tcp_pieces num_tls_pieces
+	local len_tcp_sni len_tls_sni send_interval fake_ttl fake_sleep
+	local socket_timeout dns_cache dns_cache_ttl ttl_cache safety_check
+	local udp_fake_dns by_sni_first doh_server
+	
+	config_load tlsfragment
+	config_get port main port 8080
+	config_get loglevel main loglevel "INFO"
+	config_get mode main mode "TLSfrag"
+	config_get num_tcp_pieces main num_tcp_pieces 8
+	config_get num_tls_pieces main num_tls_pieces 8
+	config_get len_tcp_sni main len_tcp_sni 4
+	config_get len_tls_sni main len_tls_sni 4
+	config_get send_interval main send_interval "0.01"
+	config_get fake_ttl main fake_ttl "query"
+	config_get fake_sleep main fake_sleep "0.2"
+	config_get socket_timeout main socket_timeout 120
+	config_get_bool dns_cache main dns_cache 1
+	config_get dns_cache_ttl main dns_cache_ttl 259200
+	config_get_bool ttl_cache main ttl_cache 1
+	config_get_bool safety_check main safety_check 0
+	config_get_bool udp_fake_dns main udp_fake_dns 1
+	config_get_bool by_sni_first main by_sni_first 0
+	config_get doh_server main doh_server "https://cloudflare-dns.com/dns-query?dns="
+	
+	# Create config directory if it doesn't exist
+	mkdir -p "$(dirname "$CONF_FILE")"
+	
+	# Generate domains object
+	local domains_json="{}"
+	local domain_list=""
+	config_list_foreach domains domain collect_domain
+	if [ -n "$domain_list" ]; then
+		domains_json="{"
+		local first=1
+		for domain in $domain_list; do
+			if [ "$first" -eq 1 ]; then
+				domains_json="${domains_json}\"$domain\": {}"
+				first=0
+			else
+				domains_json="${domains_json}, \"$domain\": {}"
+			fi
+		done
+		domains_json="${domains_json}}"
+	fi
+	
+	# Generate PAC domains array
+	local pac_domains_json="[]"
+	if [ -n "$domain_list" ]; then
+		pac_domains_json="["
+		local first=1
+		for domain in $domain_list; do
+			if [ "$first" -eq 1 ]; then
+				pac_domains_json="${pac_domains_json}\"$domain\""
+				first=0
+			else
+				pac_domains_json="${pac_domains_json}, \"$domain\""
+			fi
+		done
+		pac_domains_json="${pac_domains_json}]"
+	fi
+	
+	# Create JSON config
+	cat > "$CONF_FILE" <<EOF
+{
+    "loglevel": "$loglevel",
+    "port": $port,
+    "DOH_port": $port,
+    "num_tcp_pieces": $num_tcp_pieces,
+    "num_tls_pieces": $num_tls_pieces,
+    "len_tcp_sni": $len_tcp_sni,
+    "len_tls_sni": $len_tls_sni,
+    "send_interval": $send_interval,
+    "fake_packet": "GET / HTTP/1.1\\r\\nHost: www.baidu.com\\r\\n\\r\\n",
+    "fake_ttl": "$fake_ttl",
+    "fake_sleep": $fake_sleep,
+    "my_socket_timeout": $socket_timeout,
+    "FAKE_ttl_auto_timeout": 5,
+    "doh_server": "$doh_server",
+    "mode": "$mode",
+    "DNS_cache": $([ "$dns_cache" -eq 1 ] && echo "true" || echo "false"),
+    "DNS_cache_update_interval": 2,
+    "DNS_cache_TTL": $dns_cache_ttl,
+    "TTL_cache": $([ "$ttl_cache" -eq 1 ] && echo "true" || echo "false"),
+    "TTL_cache_update_interval": 2,
+    "safety_check": $([ "$safety_check" -eq 1 ] && echo "true" || echo "false"),
+    "UDPfakeDNS": $([ "$udp_fake_dns" -eq 1 ] && echo "true" || echo "false"),
+    "BySNIfirst": $([ "$by_sni_first" -eq 1 ] && echo "true" || echo "false"),
+    "IPredirect": {},
+    "domains": $domains_json,
+    "pac_domains": $pac_domains_json
+}
+EOF
+}
+
+collect_domain() {
+	domain_list="$domain_list $1"
+}

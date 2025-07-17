@@ -1,0 +1,188 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "TLS Fragment Proxy"
+msgstr ""
+
+msgid "TLS fragmentation proxy to bypass network censorship and filtering"
+msgstr ""
+
+msgid "Service Status"
+msgstr ""
+
+msgid "Current Status"
+msgstr ""
+
+msgid "General Settings"
+msgstr ""
+
+msgid "Enable Service"
+msgstr ""
+
+msgid "Listen Port"
+msgstr ""
+
+msgid "Port for the proxy server to listen on"
+msgstr ""
+
+msgid "Log Level"
+msgstr ""
+
+msgid "Logging verbosity level"
+msgstr ""
+
+msgid "Debug"
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Warning"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Proxy Mode"
+msgstr ""
+
+msgid "Method used to bypass filtering"
+msgstr ""
+
+msgid "TLS Fragmentation"
+msgstr ""
+
+msgid "Fake Desync"
+msgstr ""
+
+msgid "Direct Proxy"
+msgstr ""
+
+msgid "TLS Fragmentation Settings"
+msgstr ""
+
+msgid "TCP Pieces"
+msgstr ""
+
+msgid "Number of TCP fragments"
+msgstr ""
+
+msgid "TLS Pieces"
+msgstr ""
+
+msgid "Number of TLS fragments"
+msgstr ""
+
+msgid "TCP SNI Length"
+msgstr ""
+
+msgid "Length of TCP SNI fragments"
+msgstr ""
+
+msgid "TLS SNI Length"
+msgstr ""
+
+msgid "Length of TLS SNI fragments"
+msgstr ""
+
+msgid "Send Interval"
+msgstr ""
+
+msgid "Interval between fragment sends (seconds)"
+msgstr ""
+
+msgid "Fake Desync Settings"
+msgstr ""
+
+msgid "Fake TTL"
+msgstr ""
+
+msgid "Auto Query"
+msgstr ""
+
+msgid "TTL value for fake packets"
+msgstr ""
+
+msgid "Fake Sleep"
+msgstr ""
+
+msgid "Sleep time after sending fake packet (seconds)"
+msgstr ""
+
+msgid "DNS Settings"
+msgstr ""
+
+msgid "DoH Server"
+msgstr ""
+
+msgid "DNS over HTTPS server URL"
+msgstr ""
+
+msgid "Enable DNS Cache"
+msgstr ""
+
+msgid "Cache DNS queries to improve performance"
+msgstr ""
+
+msgid "DNS Cache TTL"
+msgstr ""
+
+msgid "DNS cache time-to-live in seconds (default: 3 days)"
+msgstr ""
+
+msgid "Enable TTL Cache"
+msgstr ""
+
+msgid "Cache TTL detection results"
+msgstr ""
+
+msgid "Advanced Settings"
+msgstr ""
+
+msgid "Socket Timeout"
+msgstr ""
+
+msgid "Socket timeout in seconds"
+msgstr ""
+
+msgid "Safety Check"
+msgstr ""
+
+msgid "Enable additional safety checks"
+msgstr ""
+
+msgid "UDP Fake DNS"
+msgstr ""
+
+msgid "Use fake DNS responses for UDP queries"
+msgstr ""
+
+msgid "Process by SNI First"
+msgstr ""
+
+msgid "Process connections by SNI before other methods"
+msgstr ""
+
+msgid "Proxy Domains"
+msgstr ""
+
+msgid "Domains that should be processed by the proxy"
+msgstr ""
+
+msgid "Domain"
+msgstr ""
+
+msgid "Domain name or pattern"
+msgstr ""
+
+msgid "Service Control"
+msgstr ""
+
+msgid "Apply Settings"
+msgstr ""
+
+msgid "Restart Service"
+msgstr ""
+
+msgid "Stop Service"
+msgstr ""

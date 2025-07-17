@@ -1,0 +1,79 @@
+<%
+	local sys = require "luci.sys"
+	local uci = require "luci.model.uci".cursor()
+	
+	-- Get service status
+	local running = sys.call("pgrep -f '/usr/bin/tlsfragment' > /dev/null 2>&1") == 0
+	local enabled = uci:get("tlsfragment", "main", "enabled") == "1"
+	local port = uci:get("tlsfragment", "main", "port") or "8080"
+	local mode = uci:get("tlsfragment", "main", "mode") or "TLSfrag"
+	
+	-- Status styling
+	local status_class = running and "label label-success" or "label label-important"
+	local status_text = running and "Running" or "Stopped"
+	local enabled_class = enabled and "label label-info" or "label label-warning"
+	local enabled_text = enabled and "Enabled" or "Disabled"
+-%>
+
+<div class="cbi-value-field">
+	<div style="margin-bottom: 10px;">
+		<strong>Service Status:</strong> 
+		<span class="<%=status_class%>"><%=status_text%></span>
+		&nbsp;
+		<strong>Configuration:</strong> 
+		<span class="<%=enabled_class%>"><%=enabled_text%></span>
+	</div>
+	
+	<div style="margin-bottom: 10px;">
+		<strong>Listen Port:</strong> <%=port%>
+		&nbsp;&nbsp;
+		<strong>Mode:</strong> <%=mode%>
+	</div>
+	
+	<% if running then %>
+	<div style="margin-bottom: 10px;">
+		<strong>Process ID:</strong> 
+		<%
+			local pid = sys.exec("pgrep -f '/usr/bin/tlsfragment'"):match("(%d+)")
+			write(pid or "Unknown")
+		%>
+	</div>
+	<% end %>
+	
+	<div class="btn-group">
+		<button class="btn btn-small" onclick="location.reload()">
+			<i class="icon-refresh"></i> Refresh Status
+		</button>
+		<% if running then %>
+		<button class="btn btn-small btn-danger" onclick="serviceControl('stop')">
+			<i class="icon-stop"></i> Stop Service
+		</button>
+		<% else %>
+		<button class="btn btn-small btn-success" onclick="serviceControl('start')">
+			<i class="icon-play"></i> Start Service
+		</button>
+		<% end %>
+		<button class="btn btn-small" onclick="showLogs()">
+			<i class="icon-list"></i> View Logs
+		</button>
+	</div>
+</div>
+
+<script type="text/javascript">
+function serviceControl(action) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '<%=luci.dispatcher.build_url("admin", "system", "startup")%>', true);
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState === 4) {
+			setTimeout(function() { location.reload(); }, 1000);
+		}
+	};
+	xhr.send('token=<%=token%>&action=' + action + '&service=tlsfragment');
+}
+
+function showLogs() {
+	window.open('<%=luci.dispatcher.build_url("admin", "services", "tlsfragment", "log")%>', 
+	           '_blank', 'width=800,height=600,scrollbars=yes');
+}
+</script>
