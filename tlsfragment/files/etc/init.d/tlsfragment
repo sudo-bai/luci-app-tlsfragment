@@ -30,7 +30,8 @@ start_service() {
 }
 
 stop_service() {
-	killall tlsfragment 2>/dev/null
+	# Kill by process pattern since the process name is python3
+	pkill -f '/usr/bin/tlsfragment' 2>/dev/null
 }
 
 reload_service() {
