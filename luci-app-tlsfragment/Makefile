@@ -4,7 +4,7 @@ LUCI_TITLE:=TLS Fragment Proxy
 LUCI_DEPENDS:=+tlsfragment +luci-base +luci-compat +luci-mod-admin-full
 LUCI_PKGARCH:=all
 
-PKG_VERSION:=1.0.0
+PKG_VERSION:=1.1.0
 PKG_RELEASE:=3
 
 include $(TOPDIR)/feeds/luci/luci.mk
