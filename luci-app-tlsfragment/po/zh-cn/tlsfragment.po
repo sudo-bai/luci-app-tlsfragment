@@ -175,4 +175,61 @@ msgid "Restart Service"
 msgstr "重启服务"
 
 msgid "Stop Service"
-msgstr "停止服务" 
+msgstr "停止服务"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Stopped"
+msgstr "已停止"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Configuration"
+msgstr "配置状态"
+
+msgid "Process ID"
+msgstr "进程ID"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Refresh Status"
+msgstr "刷新状态"
+
+msgid "Start Service"
+msgstr "启动服务"
+
+msgid "View Logs"
+msgstr "查看日志"
+
+msgid "Service started"
+msgstr "服务已启动"
+
+msgid "Service stopped"
+msgstr "服务已停止"
+
+msgid "Service restarted"
+msgstr "服务已重启"
+
+msgid "Service enabled"
+msgstr "服务已启用"
+
+msgid "Service disabled"
+msgstr "服务已禁用"
+
+msgid "Invalid action"
+msgstr "无效操作"
+
+msgid "Listening on port"
+msgstr "正在监听端口"
+
+msgid "Loading"
+msgstr "加载中"
+
+msgid "Mode"
+msgstr "模式"
