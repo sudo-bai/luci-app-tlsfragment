@@ -1,0 +1,97 @@
+name: Build OpenWrt Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: '24.10.1'
+        required: true
+        default: '23.05.5'
+        type: string
+
+jobs:
+  build:
+    name: Build for ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x86_64 (软路由, PC)
+          - arch: x86_64
+            target: x86/64
+            sdk_name: openwrt-sdk-23.05.5-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+
+          # aarch64_generic (N1, 树莓派4, NanoPi 等 ARMv8 设备)
+          - arch: aarch64_generic
+            target: armsr/armv8
+            sdk_name: openwrt-sdk-23.05.5-armsr-armv8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+
+          # ramips_mt7621 (红米AC2100, K2P, 新路由3 等 MTK7621 设备)
+          - arch: ramips_mt7621
+            target: ramips/mt7621
+            sdk_name: openwrt-sdk-23.05.5-ramips-mt7621_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3 file
+
+      - name: Download and Setup SDK
+        run: |
+          # 构建下载链接
+          SDK_URL="https://downloads.openwrt.org/releases/${{ inputs.sdk_version }}/targets/${{ matrix.target }}/${{ matrix.sdk_name }}"
+          
+          echo "Downloading SDK from: $SDK_URL"
+          wget -O sdk.tar.xz "$SDK_URL"
+          
+          # 解压 SDK
+          mkdir sdk
+          tar -xJf sdk.tar.xz -C sdk --strip-components=1
+          cd sdk
+          
+          # 更新 Feeds (获取依赖如 python3, lua 等)
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          
+          # 准备 .config
+          make defconfig
+
+      - name: Add Package to SDK
+        run: |
+          cd sdk/package
+          # 将仓库中的 tlsfragment 和 luci-app-tlsfragment 复制到 SDK 的 package 目录
+          # 注意：这里假设您的仓库根目录下直接就是这两个文件夹
+          cp -r $GITHUB_WORKSPACE/tlsfragment .
+          cp -r $GITHUB_WORKSPACE/luci-app-tlsfragment .
+          
+          # 检查文件结构
+          ls -R tlsfragment
+          ls -R luci-app-tlsfragment
+
+      - name: Compile Packages
+        working-directory: ./sdk
+        run: |
+          # 开启 V=s 查看详细日志以便排错
+          echo "Compiling tlsfragment..."
+          make package/tlsfragment/compile V=s
+          
+          echo "Compiling luci-app-tlsfragment..."
+          make package/luci-app-tlsfragment/compile V=s
+
+      - name: Organize Artifacts
+        run: |
+          mkdir -p bin/packages
+          # 查找生成的 ipk 文件 (通常在 sdk/bin/packages/.../base 目录下)
+          find sdk/bin -name "tlsfragment*.ipk" -exec cp {} bin/packages/ \;
+          find sdk/bin -name "luci-app-tlsfragment*.ipk" -exec cp {} bin/packages/ \;
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tlsfragment-${{ matrix.arch }}-${{ inputs.sdk_version }}
+          path: bin/packages/*.ipk
