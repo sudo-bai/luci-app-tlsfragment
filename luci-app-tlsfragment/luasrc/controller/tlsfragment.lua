@@ -21,51 +21,71 @@ function index()
 	-- Log viewer endpoint
 	entry({"admin", "services", "tlsfragment", "log"}, 
 	      call("action_log")).leaf = true
+	
+	-- Service control endpoint
+	entry({"admin", "services", "tlsfragment", "control"},
+	      post("action_control")).leaf = true
 end
 
 function action_status()
-	local sys = require "luci.sys"
 	local uci = require "luci.model.uci".cursor()
-	local status = {}
+	local e = {}
 	
-	-- Check if service is running
-	local running = sys.call("pgrep -f '/usr/bin/tlsfragment' > /dev/null 2>&1") == 0
-	status.running = running
+	-- Check if service is running and get PID
+	e.running = luci.sys.call("pgrep -f '/usr/bin/tlsfragment' > /dev/null 2>&1") == 0
+	if e.running then
+		local pid = luci.sys.exec("pgrep -f '/usr/bin/tlsfragment' | head -1"):match("(%d+)")
+		e.pid = pid
+	end
 	
 	-- Get configuration
-	status.enabled = uci:get("tlsfragment", "main", "enabled") == "1"
-	status.port = uci:get("tlsfragment", "main", "port") or "8080"
-	status.mode = uci:get("tlsfragment", "main", "mode") or "TLSfrag"
-	status.loglevel = uci:get("tlsfragment", "main", "loglevel") or "INFO"
-	
-	-- Get domain count
-	local domain_count = 0
-	uci:foreach("tlsfragment", "domains", function(s)
-		if s.domain then
-			domain_count = domain_count + 1
-		end
-	end)
-	status.domain_count = domain_count
-	
-	-- Get system info
-	status.uptime = sys.uptime()
-	status.loadavg = sys.loadavg()
+	e.enabled = uci:get("tlsfragment", "main", "enabled") == "1"
+	e.port = uci:get("tlsfragment", "main", "port") or "8080"
+	e.mode = uci:get("tlsfragment", "main", "mode") or "TLSfrag"
 	
 	-- Check port availability
-	local port_check = sys.call("netstat -ln | grep ':" .. status.port .. " ' > /dev/null 2>&1") == 0
-	status.port_listening = port_check
+	e.port_listening = luci.sys.call("netstat -ln | grep ':" .. e.port .. " ' > /dev/null 2>&1") == 0
 	
 	luci.http.prepare_content("application/json")
-	luci.http.write_json(status)
+	luci.http.write_json(e)
 end
 
 function action_log()
-	local sys = require "luci.sys"
 	local log_lines = tonumber(luci.http.formvalue("lines")) or 50
-	
-	-- Get TLS Fragment logs
-	local logs = sys.exec("logread | grep -i tlsfragment | tail -" .. log_lines)
+	local logs = luci.sys.exec("logread | grep -i tlsfragment | tail -" .. log_lines)
 	
 	luci.http.prepare_content("text/plain; charset=utf-8")
 	luci.http.write(logs or "No logs found")
+end
+
+function action_control()
+	local action = luci.http.formvalue("action")
+	local e = { success = false, message = "" }
+	
+	if action == "start" then
+		luci.sys.call("/etc/init.d/tlsfragment start >/dev/null 2>&1")
+		e.success = true
+		e.message = "Service started"
+	elseif action == "stop" then
+		luci.sys.call("/etc/init.d/tlsfragment stop >/dev/null 2>&1")
+		e.success = true
+		e.message = "Service stopped"
+	elseif action == "restart" then
+		luci.sys.call("/etc/init.d/tlsfragment restart >/dev/null 2>&1")
+		e.success = true
+		e.message = "Service restarted"
+	elseif action == "enable" then
+		luci.sys.call("/etc/init.d/tlsfragment enable >/dev/null 2>&1")
+		e.success = true
+		e.message = "Service enabled"
+	elseif action == "disable" then
+		luci.sys.call("/etc/init.d/tlsfragment disable >/dev/null 2>&1")
+		e.success = true
+		e.message = "Service disabled"
+	else
+		e.message = "Invalid action"
+	end
+	
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(e)
 end

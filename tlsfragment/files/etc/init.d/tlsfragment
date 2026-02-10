@@ -30,12 +30,24 @@ start_service() {
 }
 
 stop_service() {
-	killall tlsfragment 2>/dev/null
+	# Kill by process pattern since the process name is python3
+	pkill -f '/usr/bin/tlsfragment' 2>/dev/null
 }
 
 reload_service() {
 	stop
 	start
+}
+
+# Helper function to collect domains from config sections
+DOMAIN_LIST=""
+collect_domains() {
+	local section="$1"
+	local domains
+	config_get domains "$section" domain
+	for d in $domains; do
+		DOMAIN_LIST="$DOMAIN_LIST $d"
+	done
 }
 
 generate_config() {
@@ -67,37 +79,29 @@ generate_config() {
 	# Create config directory if it doesn't exist
 	mkdir -p "$(dirname "$CONF_FILE")"
 	
-	# Generate domains object
+	# Generate domains object and PAC domains array
 	local domains_json="{}"
-	local domain_list=""
-	config_list_foreach domains domain collect_domain
-	if [ -n "$domain_list" ]; then
-		domains_json="{"
-		local first=1
-		for domain in $domain_list; do
-			if [ "$first" -eq 1 ]; then
-				domains_json="${domains_json}\"$domain\": {}"
-				first=0
-			else
-				domains_json="${domains_json}, \"$domain\": {}"
-			fi
-		done
-		domains_json="${domains_json}}"
-	fi
-	
-	# Generate PAC domains array
 	local pac_domains_json="[]"
-	if [ -n "$domain_list" ]; then
+	DOMAIN_LIST=""
+	
+	# Collect domains from all 'domains' sections
+	config_foreach collect_domains domains
+	
+	if [ -n "$DOMAIN_LIST" ]; then
+		domains_json="{"
 		pac_domains_json="["
 		local first=1
-		for domain in $domain_list; do
+		for domain in $DOMAIN_LIST; do
 			if [ "$first" -eq 1 ]; then
+				domains_json="${domains_json}\"$domain\": {}"
 				pac_domains_json="${pac_domains_json}\"$domain\""
 				first=0
 			else
+				domains_json="${domains_json}, \"$domain\": {}"
 				pac_domains_json="${pac_domains_json}, \"$domain\""
 			fi
 		done
+		domains_json="${domains_json}}"
 		pac_domains_json="${pac_domains_json}]"
 	fi
 	
@@ -134,6 +138,3 @@ generate_config() {
 EOF
 }
 
-collect_domain() {
-	domain_list="$domain_list $1"
-}
