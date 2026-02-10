@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       sdk_version:
-        description: 'OpenWrt SDK 版本 (例如: 23.05.5)'
+        description: 'OpenWrt SDK 版本 (例如: 23.05.5 或 24.10.1)'
         required: true
         default: '23.05.5'
         type: string
@@ -36,7 +36,8 @@ jobs:
       - name: Prepare Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3 file
+          # 增加 zstd 以支持新版 SDK 解压
+          sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3 file zstd
 
       - name: Download and Setup SDK
         run: |
@@ -45,9 +46,9 @@ jobs:
           
           echo "Searching for SDK at: $BASE_URL"
           
-          # 自动抓取 SDK 文件名 (避免硬编码导致的 404)
-          # grep 匹配 openwrt-sdk-*.tar.xz 格式的文件
-          SDK_FILE=$(wget -q -O - "$BASE_URL" | grep -o 'openwrt-sdk-[^"]*\.tar\.xz' | head -n 1)
+          # 自动抓取 SDK 文件名
+          # grep -E 同时匹配 .tar.xz 和 .tar.zst
+          SDK_FILE=$(wget -q -O - "$BASE_URL" | grep -oE 'openwrt-sdk-[^"]*\.tar\.(xz|zst)' | head -n 1)
           
           if [ -z "$SDK_FILE" ]; then
             echo "::error::Could not find SDK file at $BASE_URL"
@@ -59,12 +60,19 @@ jobs:
           
           echo "Found SDK file: $SDK_FILE"
           
-          # 下载并重命名
-          wget -O sdk.tar.xz "$BASE_URL/$SDK_FILE"
+          # 下载文件
+          wget -O "sdk_archive" "$BASE_URL/$SDK_FILE"
           
           # 解压 SDK
           mkdir sdk
-          tar -xJf sdk.tar.xz -C sdk --strip-components=1
+          if [[ "$SDK_FILE" == *.zst ]]; then
+            echo "Detected ZST compression..."
+            tar -I zstd -xf sdk_archive -C sdk --strip-components=1
+          else
+            echo "Detected XZ compression..."
+            tar -xf sdk_archive -C sdk --strip-components=1
+          fi
+          
           cd sdk
           
           # 更新 Feeds (获取依赖如 python3, lua 等)
@@ -77,6 +85,7 @@ jobs:
       - name: Add Package to SDK
         run: |
           cd sdk/package
+          # 将仓库中的 tlsfragment 和 luci-app-tlsfragment 复制到 SDK 的 package 目录
           cp -r $GITHUB_WORKSPACE/tlsfragment .
           cp -r $GITHUB_WORKSPACE/luci-app-tlsfragment .
           
@@ -97,7 +106,7 @@ jobs:
       - name: Organize Artifacts
         run: |
           mkdir -p bin/packages
-          # 查找生成的 ipk 文件 (通常在 sdk/bin/packages/.../base 目录下)
+          # 查找生成的 ipk 文件
           find sdk/bin -name "tlsfragment*.ipk" -exec cp {} bin/packages/ \;
           find sdk/bin -name "luci-app-tlsfragment*.ipk" -exec cp {} bin/packages/ \;
 
