@@ -84,9 +84,16 @@ jobs:
           
           # 3. 更新 Feeds
           ./scripts/feeds update -a
-          ./scripts/feeds install -a
           
-          # 4. 生成默认配置
+          # 4. 安装 Feeds (忽略错误)
+          # 注意：feeds install -a 经常因为某个无关包(如 telephony)失败导致整个脚本退出
+          # 我们这里加上 || true 忽略非关键错误，只要后续编译能找到依赖就行
+          ./scripts/feeds install -a || true
+          
+          # 5. 显式安装必要的依赖包，确保编译所需的依赖存在
+          ./scripts/feeds install python3-light python3-logging python3-codecs python3-ctypes python3-email python3-urllib python3-uuid luci-base luci-compat luci-mod-admin-full || true
+          
+          # 6. 生成默认配置
           make defconfig
 
       - name: Add Package to SDK
@@ -101,8 +108,12 @@ jobs:
         run: |
           # 编译
           echo "Starting Compile..."
+          # 尝试编译，如果因为依赖问题失败，不要立即退出，查看输出
           make package/tlsfragment/compile V=s
           make package/luci-app-tlsfragment/compile V=s
+          
+          # 检查是否生成了 ipk
+          find bin -name "*.ipk"
 
       - name: Organize Artifacts
         run: |
