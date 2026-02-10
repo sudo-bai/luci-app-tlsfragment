@@ -47,60 +47,61 @@ jobs:
           echo "Searching for SDK at: $BASE_URL"
           
           # 自动抓取 SDK 文件名
-          # grep -E 同时匹配 .tar.xz 和 .tar.zst
           SDK_FILE=$(wget -q -O - "$BASE_URL" | grep -oE 'openwrt-sdk-[^"]*\.tar\.(xz|zst)' | head -n 1)
           
           if [ -z "$SDK_FILE" ]; then
             echo "::error::Could not find SDK file at $BASE_URL"
-            echo "Possible reasons:"
-            echo "1. The version '${{ inputs.sdk_version }}' does not exist."
-            echo "2. The target '${{ matrix.target }}' path is different in this version."
             exit 1
           fi
           
           echo "Found SDK file: $SDK_FILE"
-          
-          # 下载文件
           wget -O "sdk_archive" "$BASE_URL/$SDK_FILE"
           
           # 解压 SDK
           mkdir sdk
           if [[ "$SDK_FILE" == *.zst ]]; then
-            echo "Detected ZST compression..."
             tar -I zstd -xf sdk_archive -C sdk --strip-components=1
           else
-            echo "Detected XZ compression..."
             tar -xf sdk_archive -C sdk --strip-components=1
           fi
+
+      - name: Update Feeds (Fix Network Issues)
+        working-directory: ./sdk
+        run: |
+          # 1. 复制默认配置
+          if [ -f "feeds.conf.default" ]; then
+            cp feeds.conf.default feeds.conf
+          fi
           
-          cd sdk
+          # 2. 关键修复：将 git.openwrt.org 替换为 github.com/openwrt
+          # GitHub Actions 访问 GitHub 仓库极快，而访问官方 git 源经常超时
+          sed -i 's/git.openwrt.org\/feed/github.com\/openwrt/g' feeds.conf
+          sed -i 's/git.openwrt.org\/project/github.com\/openwrt/g' feeds.conf
           
-          # 更新 Feeds (获取依赖如 python3, lua 等)
+          echo "=== Modified feeds.conf ==="
+          cat feeds.conf
+          echo "==========================="
+          
+          # 3. 更新 Feeds
           ./scripts/feeds update -a
           ./scripts/feeds install -a
           
-          # 准备 .config
+          # 4. 生成默认配置
           make defconfig
 
       - name: Add Package to SDK
+        working-directory: ./sdk
         run: |
-          cd sdk/package
           # 将仓库中的 tlsfragment 和 luci-app-tlsfragment 复制到 SDK 的 package 目录
-          cp -r $GITHUB_WORKSPACE/tlsfragment .
-          cp -r $GITHUB_WORKSPACE/luci-app-tlsfragment .
+          cp -r $GITHUB_WORKSPACE/tlsfragment package/
+          cp -r $GITHUB_WORKSPACE/luci-app-tlsfragment package/
           
-          # 检查文件结构
-          ls -R tlsfragment
-          ls -R luci-app-tlsfragment
-
       - name: Compile Packages
         working-directory: ./sdk
         run: |
-          # 开启 V=s 查看详细日志以便排错
-          echo "Compiling tlsfragment..."
+          # 编译
+          echo "Starting Compile..."
           make package/tlsfragment/compile V=s
-          
-          echo "Compiling luci-app-tlsfragment..."
           make package/luci-app-tlsfragment/compile V=s
 
       - name: Organize Artifacts
